@@ -92,11 +92,13 @@ for i in range(number_of_figures):
         [n, n] for n in range(len(figures[i]))
     ]for j in range(number_of_figures)]
 
-def connect_points(figure, i, j):
-    pygame.draw.line(
-        screen, WHITE, (projected_points[figure][i][0], projected_points[figure][i][1]), (projected_points[figure][j][0], projected_points[figure][j][1]))
-
 figure_center = [[] for i in range(len(figures))]
+order = [0]*len(figures)
+ordered = [0]*len(figures)
+for i in range (len(figures)):
+    order[i]=i
+distance = [0]*len(figures)
+
 def calculate_figure_center(i):
     x, y, z = 0, 0, 0
     for j in range(len(figures[i])):
@@ -104,6 +106,18 @@ def calculate_figure_center(i):
         y += figures[i][j].A[1][0]
         z += figures[i][j].A[2][0]
     figure_center[i] = [x/len(figures[i]), y/len(figures[i]), z/len(figures[i])]
+
+def specify_order():
+    for i in range(len(figure_center)):
+        distance[i] = pow(pow(figure_center[i][0], 2) + pow(figure_center[i][1], 2) + pow(figure_center[i][2], 2), 1/3)
+    localordered = [order for _, order in sorted(zip(distance, order))]
+    localordered.reverse()
+    global ordered
+    ordered = localordered.copy()
+
+def connect_points(figure, i, j):
+    pygame.draw.line(
+        screen, WHITE, (projected_points[figure][i][0], projected_points[figure][i][1]), (projected_points[figure][j][0], projected_points[figure][j][1]))
 
 def check_face_orienatation():
     for i in range (number_of_figures):
@@ -218,7 +232,7 @@ def rotateZ(angleZ):
             figures[i][j]=rotated2d
 
 def draw_polygons():
-    for i in range(len(faces)):
+    for i in ordered:
         for j in range(len(faces[i])):
             if (check_face_visibility(i, j) == True):
                 tabXY = [[0]*2 for k in range (2, len(faces[i][j]))]
@@ -228,14 +242,14 @@ def draw_polygons():
                 pygame.draw.polygon(screen, faces[i][j][1], tabXY)
 
 def draw_lines():
-     for i in range(len(lines)):
+     for i in ordered:
         for j in range(len(lines[i])):
             if (check_line_visibility(i, j) == True):
                 pygame.draw.line(screen, WHITE, (projected_points[i][lines[i][j][0]][0], projected_points[i][lines[i][j][0]][1]),
                                   (projected_points[i][lines[i][j][1]][0], projected_points[i][lines[i][j][1]][1]))
 
 def draw_points():
-     for i in range(len(figures)):
+     for i in ordered:
         for j in range(len(figures[i])):
             if (check_point_visibility(i, j) == True):
                 [x, y] = projected_points[i][j]
@@ -340,6 +354,7 @@ while True:
 
     act()
     check_face_orienatation()
+    specify_order()
     draw_polygons()
     draw_lines()
     draw_points()
